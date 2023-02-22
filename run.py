@@ -78,6 +78,7 @@ class MineSectDataset(utils.Dataset):
 
     def __init__(self, path):
         self.path = path
+        self.mine_ids = []
 
         
     def load_mine_sectors(self):
@@ -86,7 +87,12 @@ class MineSectDataset(utils.Dataset):
         height, width: the size of the generated images.
         """
 
+        self.add_class("shapes", 1, "square")
+        self.add_class("shapes", 2, "circle")
+        self.add_class("shapes", 3, "triangle")
+
         # Add classes
+        '''
         self.add_class("mine_sector", 3, "lh")
         self.add_class("mine_sector", 4, "mf")
         self.add_class("mine_sector", 5, "op")
@@ -94,6 +100,8 @@ class MineSectDataset(utils.Dataset):
         self.add_class("mine_sector", 7, "sy")
         self.add_class("mine_sector", 8, "tsf")
         self.add_class("mine_sector", 9, "wr")
+        '''
+
 
         # Add images
         # Generate random specifications of images (i.e. color and
@@ -117,15 +125,16 @@ class MineSectDataset(utils.Dataset):
 
         pdb.set_trace()
         fpath = os.path.join(self.path, filename)
-        image = cv2.imread(image_id)
+        image = cv2.imread(fpath)
         return image
 
+    def load_mask(self, filename):
+        # loads the image from a file, but
 
-    def load_mask(self, image_id):
-        """Generate instance masks for shapes of the given image ID.
-        """
-
-        return mask.astype(np.bool), class_ids.astype(np.int32)
+        pdb.set_trace()
+        fpath = os.path.join(self.path, filename)
+        image = cv2.imread(fpath)
+        return image
 
 
     def image_reference(self, image_id):
@@ -135,10 +144,6 @@ class MineSectDataset(utils.Dataset):
             return info["shapes"]
         else:
             super(self.__class__).image_reference(self, image_id)
-
-
-
-
 
 
 IMG_PATH = 'dataset/images/'
@@ -160,10 +165,10 @@ def create_df():
 
 if __name__ == "__main__":
 
-    pdb.set_trace()
+    # pdb.set_trace()
     mine_sect_ds = MineSectDataset(IMG_PATH)
-    sectors = mine_sect_ds.load_mine_sectors()
-    mine_sect_ds.load_image(sectors[0])
+    mine_sect_ds.load_mine_sectors()
+    mine_sect_ds.load_image(mine_sect_ds.mine_ids[0])
 
 
 
