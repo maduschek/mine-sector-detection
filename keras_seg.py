@@ -8,7 +8,7 @@ from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras import layers
 
 
-base_dir = "C:/DATA/mine-sectors/"
+base_dir = "../DATA/mine-sectors/"
 input_dir_train = base_dir + "train_img/"
 target_dir_train = base_dir + "train_seg/"
 input_dir_test = base_dir + "test_img/"
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     ]
 
     # Train the model, doing validation at the end of each epoch.
-    epochs = 1
+    epochs = 25
     model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
 
     """
