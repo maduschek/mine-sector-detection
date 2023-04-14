@@ -8,7 +8,7 @@ from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras import layers
 
 
-base_dir = "../DATA/mine-sectors/"
+base_dir = "../../DATA/mine-sectors/"
 input_dir_train = base_dir + "train_img/"
 target_dir_train = base_dir + "train_seg/"
 input_dir_test = base_dir + "test_img/"
