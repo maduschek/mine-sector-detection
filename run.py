@@ -69,7 +69,8 @@ class MineSectorConfig(Config):
 
     # use small validation steps since the epoch is small
     VALIDATION_STEPS = 5
-    
+
+
 config = MineSectorConfig()
 config.display()
 
@@ -152,6 +153,7 @@ MASK_PATH = 'dataset/masks/'
 batch_size = 32
 num_classes = 10
 
+
 # create dataframe to get the image name/index in order
 def create_df():
     name = []
@@ -160,7 +162,6 @@ def create_df():
             name.append(filename[:-4])
 
     return pd.DataFrame({'id': name}, index=np.arange(0, len(name)))
-
 
 
 if __name__ == "__main__":
