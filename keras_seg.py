@@ -231,27 +231,15 @@ if __name__ == "__main__":
     val_gen = MineSectorHelper(batch_size, img_size, val_input_img_paths, val_target_img_paths)
     val_preds = model.predict(val_gen)
 
+    print(val_preds.shape)
+
 
     def display_mask(i):
         """Quick utility to display a model's prediction."""
         mask = np.argmax(val_preds[i], axis=-1)
         mask = np.expand_dims(mask, axis=-1)
-        ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask)).show()
+        ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask)).save("img" + str(i) + ".png")
 
+	Image.open(val_input_img_paths[i]).save(str(i) + ".png")
 
-
-    # Display results for validation image #10
-    i = 10
-
-    # Display input image
-    Image.open(val_input_img_paths[i]).show()
-
-    # Display ground-truth target mask
-    ImageOps.autocontrast(load_img(val_target_img_paths[i])).show()
-
-    # Display mask predicted by our model
-    display_mask(i)  # Note that the model only sees inputs at 150x150.
-
-
-
-    abc = 123
+	Image.open(val_input_img_paths[i]).save(str(i) + ".png")
