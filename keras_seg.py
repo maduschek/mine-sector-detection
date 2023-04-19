@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+
 # from IPython.display import display
 from tensorflow.keras.preprocessing.image import load_img
 from PIL import ImageOps, Image
@@ -7,7 +9,7 @@ import numpy as np
 from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras import layers
 
-
+# set paths
 base_dir = "../../DATA/mine-sectors/"
 input_dir_train = base_dir + "train_img/"
 target_dir_train = base_dir + "train_seg/"
@@ -194,12 +196,19 @@ if __name__ == "__main__":
     # because our target data is integers.
     model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy")
 
+    log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
+    tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+
     callbacks = [
-        keras.callbacks.ModelCheckpoint("oxford_segmentation.h5", save_best_only=True)
+        keras.callbacks.ModelCheckpoint("oxford_segmentation.h5", save_best_only=True),
+        tensorboard_callback
     ]
 
+
+
     # Train the model, doing validation at the end of each epoch.
-    epochs = 25
+    epochs = 3
     model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
 
     """
