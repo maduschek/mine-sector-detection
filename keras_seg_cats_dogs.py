@@ -1,28 +1,22 @@
-"""
-Title: Image segmentation with a U-Net-like architecture
-Author: [fchollet](https://twitter.com/fchollet)
-Date created: 2019/03/20
-Last modified: 2020/04/20
-Description: Image segmentation model trained from scratch on the Oxford Pets dataset.
-Accelerator: GPU
-"""
-"""
-## Download the data
-"""
-
-"""shell
-curl -O https://thor.robots.ox.ac.uk/~vgg/data/pets/images.tar.gz
-curl -O https://thor.robots.ox.ac.uk/~vgg/data/pets/annotations.tar.gz
-tar -xf images.tar.gz
-tar -xf annotations.tar.gz
-"""
-
-"""
-## Prepare paths of input images and target segmentation masks
-"""
-
+import random
+from tensorflow.keras import layers
 import os
 from datetime import datetime
+from tensorflow import keras
+import numpy as np
+from tensorflow.keras.preprocessing.image import load_img
+from tensorflow.keras.preprocessing.image import load_img
+from PIL import ImageOps, Image
+from datetime import datetime
+import io
+import itertools
+from packaging import version
+import tensorflow as tf
+from tensorflow import keras
+import matplotlib.pyplot as plt
+import numpy as np
+import sklearn.metrics
+
 
 input_dir = "../../data/cats_dogs/images/"
 target_dir = "../../data/cats_dogs/annotations/trimaps/"
@@ -50,28 +44,38 @@ print("Number of samples:", len(input_img_paths))
 for input_path, target_path in zip(input_img_paths[:10], target_img_paths[:10]):
     print(input_path, "|", target_path)
 
-"""
-## What does one input image and corresponding segmentation mask look like?
-"""
 
-from IPython.display import Image, display
-from tensorflow.keras.preprocessing.image import load_img
-from PIL import ImageOps
 
-# Display input image #7
-display(Image(filename=input_img_paths[9]))
+def plot_to_image(figure):
+    """Converts the matplotlib plot specified by 'figure' to a PNG image and
+    returns it. The supplied figure is closed and inaccessible after this call."""
+    # Save the plot to a PNG in memory.
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    # Closing the figure prevents it from being displayed directly inside
+    # the notebook.
+    plt.close(figure)
+    buf.seek(0)
+    # Convert PNG buffer to TF image
+    image = tf.image.decode_png(buf.getvalue(), channels=4)
+    # Add the batch dimension
+    image = tf.expand_dims(image, 0)
+    return image
 
-# Display auto-contrast version of corresponding target (per-pixel categories)
-img = ImageOps.autocontrast(load_img(target_img_paths[9]))
-display(img)
 
-"""
-## Prepare `Sequence` class to load & vectorize batches of data
-"""
+def image_grid():
+    """Return a 5x5 grid of the MNIST images as a matplotlib figure."""
+    # Create a figure to contain the plot.
+    figure = plt.figure(figsize=(10,10))
+    for i in range(25):
+        # Start next subplot.
+        plt.subplot(5, 5, i + 1, title=class_names[train_labels[i]])
+        plt.xticks([])
+        plt.yticks([])
+        plt.grid(False)
+        plt.imshow(train_images[i], cmap=plt.cm.binary)
 
-from tensorflow import keras
-import numpy as np
-from tensorflow.keras.preprocessing.image import load_img
+    return figure
 
 
 class OxfordPets(keras.utils.Sequence):
@@ -104,17 +108,11 @@ class OxfordPets(keras.utils.Sequence):
         return x, y
 
 
-"""
-## Prepare U-Net Xception-style model
-"""
-
-from tensorflow.keras import layers
-
-
+# Prepare U-Net Xception-style model
 def get_model(img_size, num_classes):
     inputs = keras.Input(shape=img_size + (3,))
 
-    ### [First half of the network: downsampling inputs] ###
+    # [First half of the network: down-sampling inputs] #
 
     # Entry block
     x = layers.Conv2D(32, 3, strides=2, padding="same")(inputs)
@@ -180,7 +178,6 @@ model.summary()
 ## Set aside a validation split
 """
 
-import random
 
 # Split our img paths into a training and a validation set
 val_samples = 1000
@@ -213,6 +210,16 @@ callbacks = [
     tensorboard_callback
 ]
 
+logdir = "logs/plots/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+file_writer = tf.summary.create_file_writer(logdir)
+
+# Prepare the plot
+figure = image_grid()
+
+# Convert to image and log
+with file_writer.as_default():
+    tf.summary.image("Training data", plot_to_image(figure), step=0)
+
 # Train the model, doing validation at the end of each epoch.
 epochs = 15
 model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
@@ -232,18 +239,15 @@ def display_mask(i):
     mask = np.argmax(val_preds[i], axis=-1)
     mask = np.expand_dims(mask, axis=-1)
     img = ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask))
-    display(img)
+
 
 
 # Display results for validation image #10
 i = 10
 
 # Display input image
-display(Image(filename=val_input_img_paths[i]))
+Image.open(val_input_img_paths[i]).save(str(i) + ".png")
 
 # Display ground-truth target mask
 img = ImageOps.autocontrast(load_img(val_target_img_paths[i]))
-display(img)
-
-# Display mask predicted by our model
-display_mask(i)  # Note that the model only sees inputs at 150x150.
+Image.open(val_input_img_paths[i]).save(str(i) + "_mask.png")
