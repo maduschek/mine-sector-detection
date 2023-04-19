@@ -3,3 +3,4 @@ dataset/
 .idea/
 /oxford_segmentation.h5
 /logs
+/mining-segments-model.h5
