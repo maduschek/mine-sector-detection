@@ -10,14 +10,25 @@ from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras import layers
 
 # set paths
-base_dir = "../../DATA/mine-sectors/"
-input_dir_train = base_dir + "train_img/"
-target_dir_train = base_dir + "train_seg/"
-input_dir_test = base_dir + "test_img/"
-target_dir_test = base_dir + "test_seg/"
-img_size = (128, 128)
-num_classes = 10
-batch_size = 2
+# cats dogs
+base_dir = "../../data/cats_dogs/"
+input_dir_train = base_dir + "images/"
+target_dir_train = base_dir + "annotations/trimaps"
+input_dir_test = base_dir + "images/"
+target_dir_test = base_dir + "annotations/trimaps"
+img_size = (160, 160)
+num_classes = 3
+batch_size = 32
+
+# mine sectors
+# base_dir = "../../data/mine-sectors/"
+# input_dir_train = base_dir + "train_img/"
+# target_dir_train = base_dir + "train_seg/"
+# input_dir_test = base_dir + "test_img/"
+# target_dir_test = base_dir + "test_seg/"
+# img_size = (128, 128)
+# num_classes = 10
+# batch_size = 2
 
 # load the image files
 input_img_paths_train = sorted(
@@ -208,7 +219,7 @@ if __name__ == "__main__":
 
 
     # Train the model, doing validation at the end of each epoch.
-    epochs = 3
+    epochs = 10
     model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
 
     """
