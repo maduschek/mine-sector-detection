@@ -2,3 +2,4 @@ Mask_RCNN/
 dataset/
 .idea/
 /oxford_segmentation.h5
+/logs

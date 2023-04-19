@@ -196,7 +196,7 @@ if __name__ == "__main__":
     # because our target data is integers.
     model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy")
 
-    log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_dir = "logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
 
     tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
