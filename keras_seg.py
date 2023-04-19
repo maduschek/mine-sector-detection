@@ -201,7 +201,7 @@ if __name__ == "__main__":
     tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
     callbacks = [
-        keras.callbacks.ModelCheckpoint("oxford_segmentation.h5", save_best_only=True),
+        keras.callbacks.ModelCheckpoint("mining-segments-model.h5", save_best_only=True),
         tensorboard_callback
     ]
 
