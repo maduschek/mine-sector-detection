@@ -11,6 +11,8 @@ from tensorflow.keras import layers
 
 # set paths
 # cats dogs
+
+'''
 base_dir = "../../data/cats_dogs/"
 input_dir_train = base_dir + "images/"
 target_dir_train = base_dir + "annotations/trimaps"
@@ -19,16 +21,19 @@ target_dir_test = base_dir + "annotations/trimaps"
 img_size = (160, 160)
 num_classes = 3
 batch_size = 32
+'''
+
 
 # mine sectors
-# base_dir = "../../data/mine-sectors/"
-# input_dir_train = base_dir + "train_img/"
-# target_dir_train = base_dir + "train_seg/"
-# input_dir_test = base_dir + "test_img/"
-# target_dir_test = base_dir + "test_seg/"
-# img_size = (128, 128)
-# num_classes = 10
-# batch_size = 2
+base_dir = "../../data/mine-sectors/"
+input_dir_train = base_dir + "train_img/"
+target_dir_train = base_dir + "train_seg/"
+input_dir_test = base_dir + "test_img/"
+target_dir_test = base_dir + "test_seg/"
+img_size = (128, 128)
+num_classes = 10
+batch_size = 2
+
 
 # load the image files
 input_img_paths_train = sorted(
@@ -66,7 +71,6 @@ target_img_paths_test = sorted(
     ]
 )
 
-
 print("Number of samples:", len(input_img_paths_train))
 
 # show image and its mask
@@ -97,8 +101,8 @@ class MineSectorHelper(keras.utils.Sequence):
     def __getitem__(self, idx):
         """Returns tuple (input, target) correspond to batch #idx."""
         i = idx * self.batch_size
-        batch_input_img_paths = self.input_img_paths[i : i + self.batch_size]
-        batch_target_img_paths = self.target_img_paths[i : i + self.batch_size]
+        batch_input_img_paths = self.input_img_paths[i: i + self.batch_size]
+        batch_target_img_paths = self.target_img_paths[i: i + self.batch_size]
         x = np.zeros((self.batch_size,) + self.img_size + (3,), dtype="float32")
         for j, path in enumerate(batch_input_img_paths):
             img = load_img(path, target_size=self.img_size)
@@ -171,7 +175,6 @@ def get_model(img_size, num_classes):
 
 
 if __name__ == "__main__":
-
     # Free up RAM in case the model definition cells were run multiple times
     keras.backend.clear_session()
 
@@ -216,10 +219,8 @@ if __name__ == "__main__":
         tensorboard_callback
     ]
 
-
-
     # Train the model, doing validation at the end of each epoch.
-    epochs = 10
+    epochs = 25
     model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
 
     """
@@ -233,13 +234,14 @@ if __name__ == "__main__":
 
     print(val_preds.shape)
 
-
     def display_mask(i):
         """Quick utility to display a model's prediction."""
         mask = np.argmax(val_preds[i], axis=-1)
         mask = np.expand_dims(mask, axis=-1)
         ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask)).save("img" + str(i) + ".png")
 
-	Image.open(val_input_img_paths[i]).save(str(i) + ".png")
+        Image.open(val_input_img_paths[i]).save(str(i) + ".png")
 
-	Image.open(val_input_img_paths[i]).save(str(i) + ".png")
+
+    for i in range(100):
+        display_mask(i)
