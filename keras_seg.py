@@ -1,6 +1,8 @@
 import os
+import time
 from datetime import datetime
-
+import pdb
+import platform
 # from IPython.display import display
 from tensorflow.keras.preprocessing.image import load_img
 from PIL import ImageOps, Image
@@ -8,6 +10,7 @@ from tensorflow import keras
 import numpy as np
 from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras import layers
+from imgrender import render
 
 # set paths
 # cats dogs
@@ -25,7 +28,11 @@ batch_size = 32
 
 
 # mine sectors
-base_dir = "../../data/mine-sectors/"
+if platform.system() == "Windows":
+    base_dir = "C:/data/mine-sectors/"
+else:
+    base_dir = "../../data/mine-sectors/"
+
 input_dir_train = base_dir + "train_img/"
 target_dir_train = base_dir + "train_seg/"
 input_dir_test = base_dir + "test_img/"
@@ -84,6 +91,19 @@ for input_path, target_path in zip(input_img_paths_train[:], target_img_paths_tr
 
     # if arr.max() > 3 or len(arr.shape) > :
     #     print(input_path, "|", target_path, " max: ", str(arr.max()))
+
+for i in range(1):
+    os.system('clear')
+    render(os.path.join(input_img_paths_train[i]), scale=(128, 128))
+    print("---------------------------------------")
+
+    mask = Image.open(os.path.join(target_img_paths_train[i]))
+    ImageOps.autocontrast(mask).save(
+        os.path.join("./", "mask_contrast" + str(i) + ".png"))
+
+    render(os.path.join("./", "mask_contrast" + str(i) + ".png"), scale=(128, 128))
+    time.sleep(5)
+
 
 
 class MineSectorHelper(keras.utils.Sequence):
@@ -208,7 +228,14 @@ if __name__ == "__main__":
     # Configure the model for training.
     # We use the "sparse" version of categorical_crossentropy
     # because our target data is integers.
-    model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy")
+    adam_opt = keras.optimizers.Adam(
+        learning_rate=0.001,
+        beta_1=0.9,
+        beta_2=0.999,
+        epsilon=1e-07,
+        amsgrad=False
+    )
+    model.compile(optimizer=adam_opt, loss="sparse_categorical_crossentropy")
 
     log_dir = "logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
 
@@ -220,8 +247,9 @@ if __name__ == "__main__":
     ]
 
     # Train the model, doing validation at the end of each epoch.
-    epochs = 25
+    epochs = 30
     model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
+    input("Press Enter to continue...")
 
     """
     ## Visualize predictions
@@ -234,14 +262,36 @@ if __name__ == "__main__":
 
     print(val_preds.shape)
 
-    def display_mask(i):
-        """Quick utility to display a model's prediction."""
-        mask = np.argmax(val_preds[i], axis=-1)
-        mask = np.expand_dims(mask, axis=-1)
-        ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask)).save("img" + str(i) + ".png")
+    def display_img_mask_gt(i):
+        os.makedirs("images", exist_ok=True)
 
-        Image.open(val_input_img_paths[i]).save(str(i) + ".png")
+        pred_mask_path = os.path.join("./", "images", "mask" + str(i) + ".png")
+        gt_mask_path = os.path.join("./", "images", "mask_gt" + str(i) + ".png")
+        img_path = os.path.join("./", "images", "img" + str(i) + ".png")
 
+        # predicted mask
+        pred_mask = np.argmax(val_preds[i], axis=-1)
+        pred_mask = np.expand_dims(pred_mask, axis=-1)
+        ImageOps.autocontrast(keras.preprocessing.image.array_to_img(pred_mask)).\
+            save(pred_mask_path)
 
-    for i in range(100):
-        display_mask(i)
+        # ground truth mask
+        gt_mask = np.asarray(Image.open(val_target_img_paths[i]))
+        gt_mask = np.expand_dims(gt_mask, axis=-1)
+        ImageOps.autocontrast(keras.preprocessing.image.array_to_img(gt_mask)). \
+            save(gt_mask_path)
+
+        # input image
+        Image.open(val_input_img_paths[i]).\
+            save(img_path)
+
+        os.system('clear')
+        render(pred_mask_path)
+        print("---------------")
+        render(gt_mask_path)
+        print("---------------")
+        render(img_path)
+        time.sleep(5)
+
+    for i in range(10):
+        display_img_mask_gt(i)
