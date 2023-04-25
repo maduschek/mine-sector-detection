@@ -92,17 +92,21 @@ for input_path, target_path in zip(input_img_paths_train[:], target_img_paths_tr
     # if arr.max() > 3 or len(arr.shape) > :
     #     print(input_path, "|", target_path, " max: ", str(arr.max()))
 
-for i in range(1):
-    os.system('clear')
-    render(os.path.join(input_img_paths_train[i]), scale=(128, 128))
-    print("---------------------------------------")
 
-    mask = Image.open(os.path.join(target_img_paths_train[i]))
-    ImageOps.autocontrast(mask).save(
-        os.path.join("./", "mask_contrast" + str(i) + ".png"))
+if False:
+    rnd_idx = (np.random.random(10)*len(input_img_paths_train)).astype(int)
+    for i in rnd_idx:
+        os.system('clear')
+        render(os.path.join(input_img_paths_train[i]), scale=(128, 128))
+        print(input_img_paths_train[i])
+        print("---------------------------------------")
 
-    render(os.path.join("./", "mask_contrast" + str(i) + ".png"), scale=(128, 128))
-    time.sleep(5)
+        mask = Image.open(os.path.join(target_img_paths_train[i]))
+        ImageOps.autocontrast(mask).save(
+            os.path.join("./", "mask_contrast" + str(i) + ".png"))
+        render(os.path.join("./", "mask_contrast" + str(i) + ".png"), scale=(128, 128))
+        print(target_img_paths_train[i])
+        time.sleep(5)
 
 
 
@@ -229,7 +233,7 @@ if __name__ == "__main__":
     # We use the "sparse" version of categorical_crossentropy
     # because our target data is integers.
     adam_opt = keras.optimizers.Adam(
-        learning_rate=0.001,
+        learning_rate=0.000005,
         beta_1=0.9,
         beta_2=0.999,
         epsilon=1e-07,
@@ -247,7 +251,7 @@ if __name__ == "__main__":
     ]
 
     # Train the model, doing validation at the end of each epoch.
-    epochs = 30
+    epochs = 2
     model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
     input("Press Enter to continue...")
 
@@ -261,6 +265,8 @@ if __name__ == "__main__":
     val_preds = model.predict(val_gen)
 
     print(val_preds.shape)
+
+
 
     def display_img_mask_gt(i):
         os.makedirs("images", exist_ok=True)
@@ -293,5 +299,4 @@ if __name__ == "__main__":
         render(img_path)
         time.sleep(5)
 
-    for i in range(10):
-        display_img_mask_gt(i)
+    # for i in range(10): display_img_mask_gt(i)
