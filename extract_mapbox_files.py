@@ -11,13 +11,14 @@ from osgeo import gdal
 Image.MAX_IMAGE_PIXELS = 10000000000
 
 path_images = "C:/data/mine-sectors/mapbox_mines_0.8m_RGB/"
-path_images = "../../data/mine-sectors/mapbox_mines_0.8m_RGB/"
+path_images = "../../data/mine-sectors/mapbox_mines_0.8m_RGB/images/"
 path_json = "./"
 os.makedirs("./out", exist_ok=True)
 
 # pdb.set_trace()
 for file in sorted(glob.glob(path_images + "*.jp2")):
 
+    # pdb.set_trace()
     ds = gdal.Open(file, gdal.GA_ReadOnly)
     geoTransform = ds.GetGeoTransform()
     minx = geoTransform[0]
@@ -26,7 +27,7 @@ for file in sorted(glob.glob(path_images + "*.jp2")):
     miny = maxy + geoTransform[5] * ds.RasterYSize
     data = None
     rb = (ds.GetRasterBand(1)).ReadAsArray()
-    pixelsize = str(rb.shape[0]) + " " + str(rb.shape[1])
+    pixelsize = str(rb.shape[1]) + " " + str(rb.shape[0])
 
     print(file)
     print([minx, miny, maxx, maxy])
