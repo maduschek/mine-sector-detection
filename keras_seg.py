@@ -31,15 +31,15 @@ batch_size = 32
 if platform.system() == "Windows":
     base_dir = "C:/data/mine-sectors/"
 else:
-    base_dir = "../../data/mine-sectors/"
+    base_dir = "../../ssd/mine-sectors/"
 
 input_dir_train = base_dir + "train_img/"
 target_dir_train = base_dir + "train_seg/"
 input_dir_test = base_dir + "test_img/"
 target_dir_test = base_dir + "test_seg/"
-img_size = (128, 128)
+img_size = (256, 256)
 num_classes = 10
-batch_size = 2
+batch_size = 32
 
 
 # load the image files
@@ -251,7 +251,7 @@ if __name__ == "__main__":
     ]
 
     # Train the model, doing validation at the end of each epoch.
-    epochs = 2
+    epochs = 5
     model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
     input("Press Enter to continue...")
 
