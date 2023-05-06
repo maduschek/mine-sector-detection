@@ -1,3 +1,5 @@
+import random
+import glob
 import os
 import time
 from datetime import datetime
@@ -6,14 +8,16 @@ import platform
 # from IPython.display import display
 from tensorflow.keras.preprocessing.image import load_img
 from PIL import ImageOps, Image
+from matplotlib import pyplot as plt
 from tensorflow import keras
 import numpy as np
 from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras import layers
 from imgrender import render
+from sklearn.metrics import confusion_matrix
+np.set_printoptions(edgeitems=30, linewidth=100000,
+    formatter=dict(float=lambda x: "%.3g" % x))
 
-# set paths
-# cats dogs
 
 '''
 base_dir = "../../data/cats_dogs/"
@@ -26,20 +30,37 @@ num_classes = 3
 batch_size = 32
 '''
 
+# a priori knowledge
+# class weights gained from seg_stats.py
+class_weights = {0: 1,
+                 1: 50.3606,
+                 2: 195.0304,
+                 3: 202.9463,
+                 4: 64.3299,
+                 5: 83.5509,
+                 6: 745.9514,
+                 7: 119.1049,
+                 8: 41.1413,
+                 9: 33.946,
+                 10: 33216.4873}
 
 # mine sectors
 if platform.system() == "Windows":
     base_dir = "C:/data/mine-sectors/"
 else:
-    base_dir = "../../ssd/mine-sectors/"
+    base_dir = "/home/maduschek/ssd/mine-sector-detection/"
+    # base_dir = "/home/maduschek/data/cats_dogs/"
 
-input_dir_train = base_dir + "train_img/"
-target_dir_train = base_dir + "train_seg/"
-input_dir_test = base_dir + "test_img/"
-target_dir_test = base_dir + "test_seg/"
+input_dir_train = base_dir + "images_trainset/"
+target_dir_train = base_dir + "masks_trainset/"
+input_dir_test = base_dir + "images_testset/"
+target_dir_test = base_dir + "masks_testset/"
 img_size = (256, 256)
 num_classes = 10
-batch_size = 32
+batch_size = 16
+
+epochs = int(input("epochs: "))
+subset_percent = float(input("subset_size in %: "))/100
 
 
 # load the image files
@@ -63,8 +84,8 @@ target_img_paths_train = sorted(
 # load the image files
 input_img_paths_test = sorted(
     [
-        os.path.join(input_dir_train, fname)
-        for fname in os.listdir(input_dir_train)
+        os.path.join(input_dir_test, fname)
+        for fname in os.listdir(input_dir_test)
         if fname.endswith(".png")
     ]
 )
@@ -72,13 +93,26 @@ input_img_paths_test = sorted(
 # load the mask files
 target_img_paths_test = sorted(
     [
-        os.path.join(target_dir_train, fname)
-        for fname in os.listdir(target_dir_train)
+        os.path.join(target_dir_test, fname)
+        for fname in os.listdir(target_dir_test)
         if fname.endswith(".png") and not fname.startswith(".")
     ]
 )
 
-print("Number of samples:", len(input_img_paths_train))
+
+# random subset for faster DEBUGGING
+subset_idx_train = (np.random.random(int(len(input_img_paths_train) * subset_percent)) * len(input_img_paths_train)).astype(int)
+input_img_paths_train = np.asarray(input_img_paths_train)[subset_idx_train]
+target_img_paths_train = np.asarray(target_img_paths_train)[subset_idx_train]
+
+subset_idx_test = (np.random.random(int(len(input_img_paths_test) * subset_percent)) * len(input_img_paths_test)).astype(int)
+input_img_paths_test = np.asarray(input_img_paths_test)[subset_idx_test]
+target_img_paths_test = np.asarray(target_img_paths_test)[subset_idx_test]
+
+print("Number of train samples:", len(input_img_paths_train))
+print("Number of test samples:", len(input_img_paths_test))
+
+
 
 # show image and its mask
 for input_path, target_path in zip(input_img_paths_train[:], target_img_paths_train[:]):
@@ -127,17 +161,41 @@ class MineSectorHelper(keras.utils.Sequence):
         i = idx * self.batch_size
         batch_input_img_paths = self.input_img_paths[i: i + self.batch_size]
         batch_target_img_paths = self.target_img_paths[i: i + self.batch_size]
-        x = np.zeros((self.batch_size,) + self.img_size + (3,), dtype="float32")
+        x = np.zeros((self.batch_size,) + self.img_size + (3,), dtype="uint8")
+
         for j, path in enumerate(batch_input_img_paths):
+            # print(path)
             img = load_img(path, target_size=self.img_size)
             x[j] = img
         y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="uint8")
+
         for j, path in enumerate(batch_target_img_paths):
             img = load_img(path, target_size=self.img_size, color_mode="grayscale")
             y[j] = np.expand_dims(img, 2)
             # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
             y[j] -= 1
         return x, y
+
+
+def get_item(idx):
+    """Returns tuple (input, target) correspond to batch #idx."""
+    i = idx * self.batch_size
+    batch_input_img_paths = self.input_img_paths[i: i + self.batch_size]
+    batch_target_img_paths = self.target_img_paths[i: i + self.batch_size]
+    x = np.zeros((self.batch_size,) + self.img_size + (3,), dtype="uint8")
+
+    for j, path in enumerate(batch_input_img_paths):
+        # print(path)
+        img = load_img(path, target_size=self.img_size)
+        x[j] = img
+    y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="uint8")
+
+    for j, path in enumerate(batch_target_img_paths):
+        img = load_img(path, target_size=self.img_size, color_mode="grayscale")
+        y[j] = np.expand_dims(img, 2)
+        # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
+        y[j] -= 1
+    return x, y
 
 
 def get_model(img_size, num_classes):
@@ -198,6 +256,40 @@ def get_model(img_size, num_classes):
     return model
 
 
+def get_optimizer(optimizer="adam"):
+
+    if optimizer == "adam":
+        return keras.optimizers.Adam(
+            learning_rate=0.00005,
+            beta_1=0.9,
+            beta_2=0.999,
+            epsilon=1e-07,
+            amsgrad=False)
+
+    if optimizer == "sgd":
+        return keras.optimizers.SGD(
+            learning_rate=0.01,
+            momentum=0.0,
+            nesterov=False,
+            weight_decay=None)
+
+    if optimizer == "rmsprop":
+        return keras.optimizers.RMSprop(
+            learning_rate=0.000000001,
+            rho=0.9,
+            momentum=0.0,
+            epsilon=1e-07,
+            centered=False,
+            weight_decay=None)
+
+    if optimizer == "adagrad":
+        return keras.optimizers.Adagrad(
+            learning_rate=0.001,
+            initial_accumulator_value=0.1,
+            epsilon=1e-07,
+            weight_decay=None)
+
+
 if __name__ == "__main__":
     # Free up RAM in case the model definition cells were run multiple times
     keras.backend.clear_session()
@@ -210,8 +302,6 @@ if __name__ == "__main__":
     ## Set aside a validation split
     """
 
-    import random
-
     # Split our img paths into a training and a validation set
     train_input_img_paths = input_img_paths_train
     train_target_img_paths = target_img_paths_train
@@ -219,52 +309,87 @@ if __name__ == "__main__":
     val_input_img_paths = input_img_paths_test
     val_target_img_paths = target_img_paths_test
 
+    print(val_input_img_paths[0])
+    print(train_input_img_paths[0])
+
     # Instantiate data Sequences for each split
-    train_gen = MineSectorHelper(
-        batch_size, img_size, train_input_img_paths, train_target_img_paths
-    )
+    train_gen = MineSectorHelper(batch_size, img_size, train_input_img_paths, train_target_img_paths)
     val_gen = MineSectorHelper(batch_size, img_size, val_input_img_paths, val_target_img_paths)
 
-    """
-    ## Train the model
-    """
 
-    # Configure the model for training.
-    # We use the "sparse" version of categorical_crossentropy
-    # because our target data is integers.
-    adam_opt = keras.optimizers.Adam(
-        learning_rate=0.000005,
-        beta_1=0.9,
-        beta_2=0.999,
-        epsilon=1e-07,
-        amsgrad=False
-    )
-    model.compile(optimizer=adam_opt, loss="sparse_categorical_crossentropy")
+    # load the model
+    model_file = "mining-segments-model.h5"
+    if os.path.isfile(model_file):
+        model = keras.models.load_model("mining-segments-model.h5")
+    else:
 
-    log_dir = "logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+        # Train the model
+        # Configure the model for training.
+        # We use the "sparse" version of categorical_crossentropy
+        # because our target data is integers.
 
-    tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+        model.compile(optimizer=get_optimizer("rmsprop"), loss="categorical_crossentropy")
+        log_dir = "logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+        tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-    callbacks = [
-        keras.callbacks.ModelCheckpoint("mining-segments-model.h5", save_best_only=True),
-        tensorboard_callback
-    ]
+        callbacks = [
+            keras.callbacks.ModelCheckpoint("mining-segments-model.h5", save_best_only=True),
+            tensorboard_callback]
 
-    # Train the model, doing validation at the end of each epoch.
-    epochs = 5
-    model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
-    input("Press Enter to continue...")
+        # Train the model, doing validation at the end of each epoch.
+        model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
 
-    """
-    ## Visualize predictions
-    """
+
+    # Visualize predictions
 
     # Generate predictions for all images in the validation set
+    # val_gen = MineSectorHelper(batch_size, img_size, val_input_img_paths, val_target_img_paths)
+    # val_preds = model.predict(val_gen, workers=1, max_queue_size=2)
 
-    val_gen = MineSectorHelper(batch_size, img_size, val_input_img_paths, val_target_img_paths)
-    val_preds = model.predict(val_gen)
+    sum_conf_mat = np.array([])
+    acc_total = 0
+    count = 0
+    for img_path, mask_path in zip(val_input_img_paths, val_target_img_paths):
+        count += 1
+        img_arr = np.asarray(Image.open(img_path))
+        mask_arr = np.asarray(Image.open(mask_path))
 
-    print(val_preds.shape)
+        dict_metrics = model.evaluate(x=np.expand_dims(img_arr, axis=0), y=np.expand_dims(mask_arr, axis=0), return_dict=True)
+        pred_mask = model.predict(np.expand_dims(img_arr, axis=0))
+
+        # save the predicted mask file and compare with gt target
+        os.makedirs("output", exist_ok=True)
+        pred_mask_path = os.path.join("./", "output", "mask_pred" + os.path.basename(img_path) + ".png")
+        pred_mask = np.argmax(pred_mask, axis=-1)
+        # pred_mask = np.expand_dims(pred_mask[0], axis=-1)
+
+        Image.fromarray(((pred_mask/10)*255).astype('B')[0]).save(pred_mask_path)
+
+        os.system('clear')
+        # render(img_path)
+        # print("-------------")
+        # render(mask_path)
+        # print("-------------")
+        # render(pred_mask_path)
+
+        res = (mask_arr == pred_mask[0]).astype(int)
+        acc = np.sum(res)/np.size(res)
+        acc_total += acc
+        print("total accuracy: ", acc_total / count)
+
+        if sum_conf_mat.size == 0:
+            sum_conf_mat = confusion_matrix(y_true=mask_arr.flatten(), y_pred=pred_mask[0].flatten(), labels=range(10))
+        else:
+            conf_mat = confusion_matrix(y_true=mask_arr.flatten(), y_pred=pred_mask[0].flatten(), labels=range(10))
+            sum_conf_mat += conf_mat
+            print(sum_conf_mat)
+
+    plt.matshow(sum_conf_mat)
+
+    a = input("continue...")
+
+
+
 
 
 

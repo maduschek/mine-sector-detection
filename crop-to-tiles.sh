@@ -1,5 +1,7 @@
-TARGDIR="/home/maduschek/ssd/mine-sector-detection/images/"
-FILES="/home/maduschek/data/mine-sectors/mapbox_mines_0.8m_RGB/images/*.jp2"
+TARGDIR="/home/maduschek/ssd/mine-sector-detection/images_trainset/"
+FILES="/home/maduschek/ssd/mine-sector-detection/images/*.jp2"
+
+mkdir -p $TARGDIR
 
 for f in $FILES
 do
