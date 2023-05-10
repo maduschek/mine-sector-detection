@@ -13,7 +13,7 @@ from osgeo import gdal
 Image.MAX_IMAGE_PIXELS = 10000000000
 
 path_images = "C:/data/mine-sectors/mapbox_mines_0.8m_RGB/"
-path_images = "../../data/mine-sectors/mapbox_mines_0.8m_RGB/images/"
+path_images = "../../ssd/mine-sector-detection/images/"
 path_json = "./"
 os.makedirs("./out", exist_ok=True)
 
@@ -37,8 +37,8 @@ for file in sorted(glob.glob(path_images + "*.jp2")):
 
     # "-te -7825738.2085 -2675527.0926 -7821399.2129 -2672659.5097 " \
 
-    string = "gdal_rasterize -l LSM_Chile_sectors_class_epsg3857 -a class -ts " + pixelsize + " -a_nodata 0 " \
-             "-te " + str(minx) + " " + str(miny) + " " + str(maxx) + " " + str(maxy) + " " \
+    string = "gdal_rasterize -l LSM_Chile_sectors_class_epsg3857 -a class -ts " + pixelsize + \
+             " -te " + str(minx) + " " + str(miny) + " " + str(maxx) + " " + str(maxy) + " " \
              "-ot Byte -of GTiff '" + path_json + "LSM_Chile_sectors_class_epsg3857.geojson' " \
              "./out/mask_" + os.path.basename(file)[:-4] + ".tif"
 

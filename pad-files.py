@@ -16,7 +16,7 @@ from imgrender import render
 
 # mine sectors
 if platform.system() == "Windows":
-    base_dir = "C:/data/mine-sectors/"
+    base_dir = "C:/data/"
 else:
     base_dir = "/home/maduschek/ssd/mine-sector-detection/"
 
