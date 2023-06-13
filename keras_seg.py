@@ -285,7 +285,7 @@ def get_optimizer(optimizer="adam"):
 
     if optimizer == "adam":
         return keras.optimizers.Adam(
-            learning_rate=0.001,
+            learning_rate=0.0001,
             beta_1=0.9,
             beta_2=0.999,
             epsilon=1e-07,

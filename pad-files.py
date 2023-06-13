@@ -29,6 +29,7 @@ datasets = [base_dir + "images_trainset/",
 for dataset in datasets:
     for img_path in glob.glob(os.path.join(dataset, "*.png")):
         img = Image.open(img_path)
+        print(img_path)
 
         if img.size != (256, 256):
             print("file: ", img_path, ', size: ', str(img.size))

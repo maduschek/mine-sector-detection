@@ -6,10 +6,7 @@ import pdb
 from osgeo import gdal
 import operator
 
-# gdal_rasterize -l LSM_Chile_sectors_class_epsg3857 -a class -ts 25729.0 13441.0 -a_nodata 0.0 -te -7663806.3641 -2396313.3772 -7633077.4844 -2380260.4069 -ot Float32 -of GTiff "C:/Dropbox/TUM SIPEO/Projekte/RS mining facilities/L-ASM Mining Dataset/ds/LSM_Chile_sectors_class_epsg3857.geojson" C:/Users/ma>
-
-
-# creates mask files based on images and geojson file
+# checks if the image size equals the mask size
 
 # path_images = "C:/data/mine-sectors/mapbox_mines_0.8m_RGB/"
 path_images = "/home/maduschek/ssd/mine-sector-detection/images_trainset/"
