@@ -19,6 +19,10 @@ from sklearn.metrics import confusion_matrix
 np.set_printoptions(edgeitems=30, linewidth=100000,
     formatter=dict(float=lambda x: "%.3g" % x))
 
+# TODO:
+# The predicted output masks are somewhat working, but the output is not the class value (0-10), it is a proportional
+# value from 0-1 * 255 (e.g. 3 -> 76 or 229 -> 9)
+
 
 '''
 base_dir = "../../data/cats_dogs/"
@@ -47,15 +51,16 @@ class_weights = {0: 1,
 
 # mine sectors
 if platform.system() == "Windows":
-    base_dir = "C:/data/"
+    base_dir = "C:/DATA/mine-sector-detection/"
 else:
-    base_dir = "/home/maduschek/ssd/mine-sector-detection/"
+    base_dir = "/home/maduschek/DATA/mine-sector-detection/"
     # base_dir = "/home/maduschek/ssd/mine-sector-detection/DEBUG/"
 
-input_dir_train = base_dir + "images_trainset/"
-target_dir_train = base_dir + "masks_trainset/"
-input_dir_test = base_dir + "images_trainset/"
-target_dir_test = base_dir + "masks_trainset/"
+# path to train and test set
+input_dir_train = base_dir + "patches_img_trainset/"
+target_dir_train = base_dir + "patches_mask_trainset/"
+input_dir_test = base_dir + "patches_img_trainset/"
+target_dir_test = base_dir + "patches_mask_trainset/"
 img_size = (256, 256)
 num_classes = 10
 batch_size = 16
@@ -108,14 +113,19 @@ if subset_percent != 0:
     input_img_paths_train = np.asarray(input_img_paths_train)[subset_idx_train]
     target_img_paths_train = np.asarray(target_img_paths_train)[subset_idx_train]
 
-
+    np.random.seed(42)
     subset_idx_test = (np.random.random(int(len(input_img_paths_test) * subset_percent)) * len(input_img_paths_test)).astype(int)
     input_img_paths_test = np.asarray(input_img_paths_test)[subset_idx_test]
     target_img_paths_test = np.asarray(target_img_paths_test)[subset_idx_test]
 
 print("Number of train samples:", len(input_img_paths_train))
+for i in range(5):
+    print(input_img_paths_train[i])
+print("...")
 print("Number of test samples:", len(input_img_paths_test))
-
+for i in range(5):
+    print(input_img_paths_test[i])
+print("...")
 
 
 # show image and its mask

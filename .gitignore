@@ -5,3 +5,7 @@ dataset/
 /logs
 /mining-segments-model.h5
 /images
+*.h5
+out/
+output/
+requirements_.txt
